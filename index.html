@@ -88,7 +88,7 @@
             });
             const deflate = pako.deflate(data);
             const bfmRule = buf2hex(deflate)?.toUpperCase();
-            window.open('https://air.tourvis.com/booking/findFareRule.lts?fareRec=' + encodeURIComponent(`BfmRule=${bfmRule}`),'_blank');
+            window.open('http://flyen.philippineair.co.kr/booking/findFareRule.lts?fareRec=' + encodeURIComponent(`BfmRule=${bfmRule}`),'_blank');
             e.preventDefault();
         }
     </script>
