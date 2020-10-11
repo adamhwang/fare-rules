@@ -1,0 +1,95 @@
+<html>
+    <head>
+        <style>
+            input { display: block; margin-bottom: 1rem; text-transform: uppercase; }
+        </style>
+    </head>
+    <body>
+        <form onsubmit="submitForm(this, event)">
+            <label>
+                carrier:
+                <input id="carrier" name="carrier" maxlength="2" required>
+            </label>
+            <label>
+                origin:
+                <input id="origin" name="origin" maxlength="3" required>
+            </label>
+            <label>
+                destination:
+                <input id="destination" name="destination" maxlength="3" required>
+            </label>
+            <label>
+                fare basis:
+                <input id="fareBasis" name="fareBasis" required>
+            </label>
+            <label>
+                departure:
+                <input type="date" id="departure" name="departure" required>
+            </label>
+            <label>
+                return:
+                <input type="date" id="return" name="return">
+            </label>
+            <button type="submit">submit</input>
+        </form>
+    </body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/1.0.11/pako.min.js" integrity="sha512-euWc/Qv8Kp0CbTX1M+Q3BvUyoOaq9Au50TT7vz3MFf5ver39ybq6zV+RngDY8eN8AIQFigxjwYv6jhoP546vfQ==" crossorigin="anonymous"></script>
+    <script>
+        function buf2hex(buffer) {
+            return Array.prototype.map.call(buffer, x => ('00' + x.toString(16)).slice(-2)).join('');
+        }
+
+        function submitForm(o, e) {
+            const carrier = o.carrier.value?.toUpperCase();
+            const origin = o.origin.value?.toUpperCase();
+            const destination = o.destination.value?.toUpperCase();
+            const fareBasis = o.fareBasis.value?.toUpperCase() || '';
+            const departureDate = o.departure.value + 'T00:00:00';
+            const returnDate = o.return.value + 'T00:00:00';
+            const bookingCode = fareBasis[0];
+
+            const fb = [`${origin},${destination},,${origin},,${destination},,FROM,${carrier},${bookingCode},1,${fareBasis},,,,`];
+
+            const ods = [{
+                "OD": `${departureDate},${departureDate},${bookingCode},,${origin},${destination},${carrier},${carrier},,A,,1`
+            }];
+
+            if (o.return.value) {
+                fb.push(`${destination},${origin},,${destination},,${origin},,TO,${carrier},${bookingCode},2,${fareBasis},,,,`);
+                ods.push({
+                    "OD": `${returnDate},${returnDate},${bookingCode},,${destination},${origin},${carrier},${carrier},,A,,2`
+                });
+            }
+
+            const data = JSON.stringify({
+                "GS": "",
+                "CC": "",
+                "PF": {
+                    "PT": "ADT",
+                    "BG": "",
+                    "FA": "",
+                    "SC": "",
+                    "XS": "",
+                    "VC": carrier,
+                    "IPT": "",
+                    "CPT": "",
+                    "FE": ",BSC",
+                    "FB": fb.join('^'),
+                    "EC": "",
+                    "AF": fareBasis,
+                    "DA": "0,0,0",
+                    "IT": "ADT",
+                    "FG": "",
+                    "ADF": "",
+                    "PC": ""
+                },
+                "TL": "",
+                "ODs": ods
+            });
+            const deflate = pako.deflate(data);
+            const bfmRule = buf2hex(deflate)?.toUpperCase();
+            window.open('https://air.tourvis.com/booking/findFareRule.lts?fareRec=' + encodeURIComponent(`BfmRule=${bfmRule}`),'_blank');
+            e.preventDefault();
+        }
+    </script>
+</html>
